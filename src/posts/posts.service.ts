@@ -4,6 +4,7 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -122,36 +123,6 @@ export class PostsService {
       throw new NotFoundException(`Post with slug ${slug} not found`);
     }
     return post;
-  }
-
-  /**
-   * Add a like to a post.
-   * @param {string} id - The ID of the post to like.
-   * @returns {Promise<PostEntity>} A promise that resolves to the liked post.
-   */
-  async likePost(id: string): Promise<PostEntity> {
-    const post = await this.findOne(id);
-    if (!post) {
-      throw new NotFoundException(`Post with id ${id} not found`);
-    }
-    post.likes += 1;
-    return this.postRepository.save(post);
-  }
-
-  /**
-   * Remove a like from a post.
-   * @param {string} id - The ID of the post to unlike.
-   * @returns {Promise<PostEntity>} A promise that resolves to the unliked post.
-   */
-  async removeLikeFromPost(id: string): Promise<PostEntity> {
-    const post = await this.findOne(id);
-    if (!post) {
-      throw new NotFoundException(`Post with id ${id} not found`);
-    }
-    if (post.likes > 0) {
-      post.likes -= 1;
-    }
-    return this.postRepository.save(post);
   }
 
   /**

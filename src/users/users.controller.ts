@@ -33,6 +33,7 @@ import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from './enums/user-role.enum';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { UserId } from 'src/auth/decorators/user-id.decorator';
+import { UserIsUserGuard } from './guards/user-is-user.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -61,6 +62,7 @@ export class UsersController {
   })
   @ApiOperation({ summary: 'get all users' })
   @Get()
+  @UseGuards(JwtAuthGuard)
   findAll(): Promise<UserEntity[]> {
     return this.usersService.findAll();
   }
@@ -72,7 +74,7 @@ export class UsersController {
     type: UserEntity,
   })
   @ApiResponse({ status: 404, description: 'No user found for matching ID' })
-  @Get('by-id')
+  @Get('by-id/:id')
   @Roles(UserRole.ADMIN, UserRole.USER)
   async findOne(@Query('id') id: string): Promise<UserEntity> {
     console.log(id);
@@ -120,10 +122,10 @@ export class UsersController {
     status: 204,
     description: 'The user has been successfully deleted.',
   })
-  @Delete(':id')
+  @Delete()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string): Promise<void> {
+  async remove(@UserId() id: string): Promise<void> {
     return this.usersService.remove(id);
   }
 }

@@ -29,9 +29,15 @@ export class PostsService {
    * @param {CreatePostDto} createPostDto - The information of the post to create.
    * @returns {Promise<PostEntity>} A promise that resolves to the created post.
    */
-  async create(createPostDto: CreatePostDto): Promise<PostEntity> {
+  async create(
+    createPostDto: CreatePostDto,
+    userId: string,
+  ): Promise<PostEntity> {
     try {
-      const post = this.postRepository.create(createPostDto);
+      const post = this.postRepository.create({
+        ...createPostDto,
+        user: { id: userId },
+      });
       const savedPost = await this.postRepository.save(post);
       this.logger.log(`Post with id ${savedPost.id} was created`);
       return savedPost;

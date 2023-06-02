@@ -5,8 +5,8 @@ import { AppConfigService } from './config/app-config/app.config.service';
 import * as cookieParser from 'cookie-parser';
 import { corsOptions } from './config/cors-config';
 import * as cors from 'cors';
-import { ValidationPipe } from './common/pipes/validation.pipe';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

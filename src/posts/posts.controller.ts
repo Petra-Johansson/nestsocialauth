@@ -11,6 +11,8 @@ import {
   HttpCode,
   Res,
   NotFoundException,
+  UseGuards,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -18,6 +20,11 @@ import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostEntity } from './entities/post.entity';
+import { UserId } from 'src/auth/decorators/user-id.decorator';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { UserRole } from 'src/users/enums/user-role.enum';
 
 @ApiTags('posts')
 @Controller('posts')
@@ -32,15 +39,18 @@ export class PostsController {
   @ApiBody({ type: CreatePostDto })
   @HttpCode(201)
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UsePipes(ValidationPipe)
   async create(
+    @UserId() userId: string,
     @Res() res: Response,
     @Body() createPostDto: CreatePostDto,
-  ): Promise<PostEntity> {
-    const post = await this.postsService.create(createPostDto);
+  ) {
+    const post = await this.postsService.create(createPostDto, userId);
     res.set('Location', `/posts/${post.id}`);
-    return post;
+    return res.status(HttpStatus.CREATED).json(post);
   }
+
   @ApiOperation({ summary: 'Retrieve all posts' })
   @ApiResponse({
     status: 200,
@@ -48,6 +58,7 @@ export class PostsController {
     type: [PostEntity],
   })
   @Get()
+  @UseGuards(JwtAuthGuard)
   async findAll(): Promise<PostEntity[]> {
     return this.postsService.findAll();
   }
@@ -60,6 +71,7 @@ export class PostsController {
   })
   @ApiResponse({ status: 404, description: 'No post found for matching ID' })
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: string): Promise<PostEntity> {
     const post = await this.postsService.findOne(id);
     if (!post) {
@@ -79,6 +91,7 @@ export class PostsController {
     description: 'No posts found for matching userId',
   })
   @Get(':userId')
+  @UseGuards(JwtAuthGuard)
   async findByUserId(@Param('userId') userId: string): Promise<PostEntity[]> {
     const posts = await this.postsService.findByUserId(userId);
     if (!posts) {
@@ -95,6 +108,7 @@ export class PostsController {
   })
   @ApiResponse({ status: 404, description: 'No post found for matching slug' })
   @Get('/slug/:slug')
+  @UseGuards(JwtAuthGuard)
   async findPostBySlug(@Param('slug') slug: string): Promise<PostEntity> {
     const post = await this.postsService.findPostBySlug(slug);
     if (!post) {
@@ -111,6 +125,7 @@ export class PostsController {
   })
   @ApiResponse({ status: 404, description: 'No post found for matching ID' })
   @Post(':id/like')
+  @UseGuards(JwtAuthGuard)
   async likePost(@Param('id') id: string): Promise<PostEntity> {
     return this.postsService.likePost(id);
   }
@@ -123,6 +138,7 @@ export class PostsController {
   })
   @ApiResponse({ status: 404, description: 'No post found for matching ID' })
   @Post(':id/unlike')
+  @UseGuards(JwtAuthGuard)
   async removeLikeFromPost(@Param('id') id: string): Promise<PostEntity> {
     return this.postsService.removeLikeFromPost(id);
   }
@@ -136,6 +152,7 @@ export class PostsController {
   @ApiResponse({ status: 404, description: 'No post found for matching ID' })
   @ApiBody({ type: UpdatePostDto })
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
   async update(
     @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,
@@ -150,6 +167,7 @@ export class PostsController {
   })
   @ApiResponse({ status: 404, description: 'No post found for matching ID' })
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(204)
   async remove(@Param('id') id: string): Promise<void> {
     return this.postsService.remove(id);

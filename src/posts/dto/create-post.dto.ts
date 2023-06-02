@@ -21,11 +21,6 @@ export class CreatePostDto {
   @IsString()
   description: string;
 
-  @ApiProperty({ required: true })
-  @IsNotEmpty()
-  @IsUUID()
-  userId: string;
-
   @ApiProperty()
   @IsOptional()
   @ArrayNotEmpty()

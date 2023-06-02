@@ -17,6 +17,7 @@ import {
   ApiProperty,
   ApiPropertyOptional,
 } from '@nestjs/swagger';
+import { RefreshTokenEntity } from 'src/auth/entities/refresh-token.entity';
 
 @Entity({ name: 'users' })
 export class UserEntity {
@@ -56,6 +57,9 @@ export class UserEntity {
     //standard number for rounds of salting: 10
     this.password = await bcrypt.hash(this.password, 10);
   }
+
+  @OneToMany(() => RefreshTokenEntity, (refreshToken) => refreshToken.user)
+  refreshTokens: RefreshTokenEntity[];
 
   @ApiProperty({ type: () => [PostEntity] })
   @OneToMany(() => PostEntity, (post) => post.user)

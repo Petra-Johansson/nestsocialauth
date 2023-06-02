@@ -4,6 +4,7 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -76,7 +77,71 @@ export class UsersService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      console.error(`Failed to find user: ${error.message}`);
+      this.logger.error(`Failed to find user: ${error.message}`);
+      throw new HttpException(
+        'Failed to find user',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  /**
+   * Get a user by email.
+   * @param {string} email - The email of the user to retrieve.
+   * @returns {Promise<UserEntity>} A promise that resolves to the user, if found.
+   */
+  async findOneByEmail(email: string): Promise<UserEntity> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email: email },
+        select: [
+          'id',
+          'name',
+          'email',
+          'phone',
+          'contractNumber',
+          'image',
+          'roles',
+          'password',
+          'createdAt',
+          'updatedAt',
+        ],
+      });
+      if (!user) {
+        throw new NotFoundException(`User with email ${email} not found`);
+      }
+      return user;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      this.logger.error(`Failed to find user: ${error.message}`);
+      throw new HttpException(
+        'Failed to find user',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  /**
+   * Get a user by refreshToken.
+   * @param {string} refreshToken - The refreshToken of the user to retrieve.
+   * @returns {Promise<UserEntity>} A promise that resolves to the user, if found.
+   */
+  async findOneByRefreshToken(refreshToken: string): Promise<UserEntity> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { refreshTokens: { token: refreshToken } },
+      });
+      if (!user) {
+        throw new NotFoundException(`User with id ${refreshToken} not found`);
+      }
+      return user;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      this.logger.error(`Failed to find user: ${error.message}`);
       throw new HttpException(
         'Failed to find user',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -86,21 +151,23 @@ export class UsersService {
 
   /**
    * Update a user.
-   * @param {string} id - The ID of the user to update.
    * @param {UpdateUserDto} updateUserDto - The new information of the user.
    * @returns {Promise<UserEntity>} A promise that resolves to the updated user, if found.
    */
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<UserEntity> {
+  async update(
+    userId: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<UserEntity> {
     try {
       const user = await this.userRepository.preload({
-        id: id,
+        id: userId,
         ...updateUserDto,
       });
       if (!user) {
-        throw new NotFoundException(`User with id ${id} not found`);
+        throw new NotFoundException(`User with id ${userId} not found`);
       }
       const updatedUser = await this.userRepository.save(user);
-      this.logger.log(`User with id ${id} was updated`);
+      this.logger.log(`User with id ${userId} was updated`);
       return updatedUser;
     } catch (error) {
       if (error instanceof NotFoundException) {

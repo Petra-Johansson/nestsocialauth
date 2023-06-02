@@ -27,8 +27,8 @@ import { UserEntity } from './entities/user.entity';
 import { UsersService } from './users.service';
 import { Response } from 'express';
 
-@Controller('users')
 @ApiTags('Users')
+@Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

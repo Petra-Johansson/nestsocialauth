@@ -26,6 +26,7 @@ import { UserIsAuthorGuard } from './guards/user-is-author.guard';
 
 @ApiTags('posts')
 @Controller('posts')
+@UseGuards(JwtAuthGuard)
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
@@ -37,7 +38,6 @@ export class PostsController {
   @ApiBody({ type: CreatePostDto })
   @HttpCode(201)
   @Post()
-  @UseGuards(JwtAuthGuard)
   @UsePipes(ValidationPipe)
   async create(
     @UserId() userId: string,
@@ -56,7 +56,6 @@ export class PostsController {
     type: [PostEntity],
   })
   @Get()
-  @UseGuards(JwtAuthGuard)
   async findAll(): Promise<PostEntity[]> {
     return this.postsService.findAll();
   }
@@ -69,7 +68,6 @@ export class PostsController {
   })
   @ApiResponse({ status: 404, description: 'No post found for matching ID' })
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: string): Promise<PostEntity> {
     const post = await this.postsService.findOne(id);
     if (!post) {
@@ -89,7 +87,6 @@ export class PostsController {
     description: 'No posts found for matching userId',
   })
   @Get(':userId')
-  @UseGuards(JwtAuthGuard)
   async findByUserId(@Param('userId') userId: string): Promise<PostEntity[]> {
     const posts = await this.postsService.findByUserId(userId);
     if (!posts) {
@@ -105,8 +102,7 @@ export class PostsController {
     type: PostEntity,
   })
   @ApiResponse({ status: 404, description: 'No post found for matching slug' })
-  @Get('slug/:slug')
-  @UseGuards(JwtAuthGuard)
+  @Get(':slug')
   async findPostBySlug(@Param('slug') slug: string): Promise<PostEntity> {
     const post = await this.postsService.findPostBySlug(slug);
     if (!post) {
@@ -124,7 +120,7 @@ export class PostsController {
   @ApiResponse({ status: 404, description: 'No post found for matching ID' })
   @ApiBody({ type: UpdatePostDto })
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, UserIsAuthorGuard)
+  @UseGuards(UserIsAuthorGuard)
   async update(
     @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,
@@ -139,7 +135,7 @@ export class PostsController {
   })
   @ApiResponse({ status: 404, description: 'No post found for matching ID' })
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, UserIsAuthorGuard)
+  @UseGuards(UserIsAuthorGuard)
   @HttpCode(204)
   async remove(@Param('id') id: string): Promise<void> {
     return this.postsService.remove(id);

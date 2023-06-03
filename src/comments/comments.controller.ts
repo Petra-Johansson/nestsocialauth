@@ -8,6 +8,8 @@ import {
   Delete,
   HttpCode,
   Res,
+  UseGuards,
+  HttpStatus,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -15,9 +17,12 @@ import { UpdateCommentDto } from './dto/update-comment.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CommentEntity } from './entities/comment.entity';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { UserId } from 'src/auth/decorators/user-id.decorator';
 
 @ApiTags('comments')
 @Controller('comments')
+@UseGuards(JwtAuthGuard)
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
@@ -30,12 +35,13 @@ export class CommentsController {
   @HttpCode(201)
   @Post()
   async create(
+    @UserId() userId: string,
     @Res() res: Response,
     @Body() createCommentDto: CreateCommentDto,
-  ): Promise<CommentEntity> {
-    const comment = await this.commentsService.create(createCommentDto);
+  ) {
+    const comment = await this.commentsService.create(createCommentDto, userId);
     res.set('Location', `/comments/${comment.id}`);
-    return comment;
+    return res.status(HttpStatus.CREATED).json(comment);
   }
 
   @ApiOperation({ summary: 'Retrieve all comments' })

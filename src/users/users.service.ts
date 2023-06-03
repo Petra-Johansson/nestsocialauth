@@ -4,11 +4,9 @@ import {
   HttpException,
   HttpStatus,
   Logger,
-  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
@@ -31,6 +29,26 @@ export class UsersService {
    * @returns {Promise<UserEntity>} A promise that resolves to the created user.
    */
   async create(createUserDto: CreateUserDto): Promise<UserEntity> {
+    const { email } = createUserDto;
+    const { phone } = createUserDto;
+    const existingEmail = await this.userRepository.findOne({
+      where: { email },
+    });
+    const existingPhone = await this.userRepository.findOne({
+      where: { phone },
+    });
+    if (existingEmail) {
+      throw new HttpException(
+        'User with this email already exists',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (existingPhone) {
+      throw new HttpException(
+        'This phone number is already related to a user',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     try {
       const user = this.userRepository.create(createUserDto);
       const savedUser = await this.userRepository.save(user);
@@ -158,6 +176,27 @@ export class UsersService {
     userId: string,
     updateUserDto: UpdateUserDto,
   ): Promise<UserEntity> {
+    const { email, phone } = updateUserDto;
+    const existingEmailUser = await this.userRepository.findOne({
+      where: { email },
+    });
+    const existingPhoneUser = await this.userRepository.findOne({
+      where: { phone },
+    });
+
+    if (existingEmailUser && existingEmailUser.id !== userId) {
+      throw new HttpException(
+        'User with this email already exists',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (existingPhoneUser && existingPhoneUser.id !== userId) {
+      throw new HttpException(
+        'This phone number is already related to a user',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     try {
       const user = await this.userRepository.preload({
         id: userId,
@@ -170,7 +209,10 @@ export class UsersService {
       this.logger.log(`User with id ${userId} was updated`);
       return updatedUser;
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof HttpException
+      ) {
         throw error;
       }
       this.logger.error(`Failed to update user: ${error.message}`);
@@ -190,7 +232,8 @@ export class UsersService {
     try {
       const user = await this.findOne(id);
       if (user) {
-        await this.userRepository.delete(id);
+        user.deletedAt = new Date();
+        await this.userRepository.save(user);
         this.logger.log(`User with id ${id} was deleted`);
       } else {
         throw new NotFoundException(`User with id ${id} not found`);

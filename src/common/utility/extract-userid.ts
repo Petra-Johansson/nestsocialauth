@@ -2,13 +2,12 @@ import { UnauthorizedException } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 
 export function extractUserId(request): string {
-  const authHeader = request.headers.authorization;
-  if (!authHeader) {
+  const jsonWebToken = request.cookies['jwt'];
+  if (!jsonWebToken) {
     throw new UnauthorizedException('Authorization header not found');
   }
-  const [, token] = authHeader.split(' ');
   try {
-    const decoded = jwt.decode(token);
+    const decoded = jwt.decode(jsonWebToken);
     if (typeof decoded === 'string' || decoded === null) {
       throw new Error('Unable to decode jwt');
     }

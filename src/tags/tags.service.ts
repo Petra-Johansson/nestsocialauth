@@ -27,9 +27,12 @@ export class TagsService {
    * @param {CreateTagDto} createTagDto - The information of the tag to create.
    * @returns {Promise<TagEntity>} A promise that resolves to the created tag.
    */
-  async create(createTagDto: CreateTagDto): Promise<TagEntity> {
+  async create(createTagDto: CreateTagDto, userId: string): Promise<TagEntity> {
     try {
-      const tag = this.tagRepository.create(createTagDto);
+      const tag = this.tagRepository.create({
+        ...createTagDto,
+        user: { id: userId },
+      });
       const savedTag = await this.tagRepository.save(tag);
       this.logger.log(`Tag with id ${savedTag.id} was created`);
       return savedTag;

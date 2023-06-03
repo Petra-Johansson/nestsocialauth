@@ -34,7 +34,7 @@ export class UserEntity {
   email: string;
 
   @ApiProperty()
-  @Column()
+  @Column({ unique: true })
   phone: string;
 
   @ApiProperty()
@@ -58,7 +58,11 @@ export class UserEntity {
     this.password = await bcrypt.hash(this.password, 10);
   }
 
-  @OneToMany(() => RefreshTokenEntity, (refreshToken) => refreshToken.user)
+  @ApiHideProperty()
+  @OneToMany(() => RefreshTokenEntity, (refreshToken) => refreshToken.user, {
+    cascade: ['remove'],
+    onDelete: 'CASCADE',
+  })
   refreshTokens: RefreshTokenEntity[];
 
   @ApiProperty({ type: () => [PostEntity] })
@@ -81,4 +85,9 @@ export class UserEntity {
   @ApiProperty()
   @UpdateDateColumn()
   updatedAt: Date;
+
+  //makes it possible to de a soft delete
+  @ApiProperty()
+  @Column({ type: 'timestamp', nullable: true })
+  deletedAt: Date;
 }

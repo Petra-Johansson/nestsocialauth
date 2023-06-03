@@ -7,7 +7,16 @@ import { JWTConfigService } from 'src/config/jwt-config/jwt.config.service';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly jwtConfigService: JWTConfigService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (request) => {
+          const data = request.cookies['jwt'];
+          console.log(data);
+          if (!data) {
+            return null;
+          }
+          return data;
+        },
+      ]),
       ignoreExpiration: false,
       secretOrKey: jwtConfigService.jwtSecret,
     });

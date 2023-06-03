@@ -1,9 +1,10 @@
 import { Controller, Delete, Param, Post, UseGuards } from '@nestjs/common';
 import { LikedPostsService } from './liked-posts.service';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { UserId } from 'src/auth/decorators/user-id.decorator';
 
+@ApiTags('liked-posts')
 @Controller('liked-posts')
 export class LikedPostsController {
   constructor(private readonly likedPostsService: LikedPostsService) {}
@@ -15,7 +16,7 @@ export class LikedPostsController {
     type: String,
   })
   @ApiResponse({ status: 404, description: 'No post found for matching ID' })
-  @Post('/:id')
+  @Post(':id')
   @UseGuards(JwtAuthGuard)
   async likePost(@UserId() userId: string, @Param('id') id: string) {
     return this.likedPostsService.likePost(userId, id);

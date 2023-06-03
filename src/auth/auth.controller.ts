@@ -39,7 +39,7 @@ export class AuthController {
   })
   @Post('refresh')
   async refresh(@Request() req, @Res() res: Response) {
-    const refreshToken = req.body.refreshToken; // Get the refresh token from the request
+    const refreshToken = req.cookies['refreshToken']; // Get the refresh token from the request
     const jwt = await this.authService.refreshToken(refreshToken);
     res.cookie('jwt', jwt.access_token, { httpOnly: true }); // Set the cookie here
     res.cookie('refreshToken', jwt.refresh_token, { httpOnly: true });
@@ -55,6 +55,14 @@ export class AuthController {
   @Post('logout')
   logout(@Request() req, @Res() res: Response) {
     // set tokens in the cookie to empty string
+
+    /*  use this to blacklist used tokens 
+    const jwtToken = req.cookies['jwt'];
+  const refreshToken = req.cookies['refreshToken'];
+  
+  this.tokenService.blacklist(jwtToken);
+  this.tokenService.blacklist(refreshToken);
+    */
     res.cookie('jwt', '', { httpOnly: true, expires: new Date(0) });
     res.cookie('refreshToken', '', { httpOnly: true, expires: new Date(0) });
     res.json({ message: 'Logged out successfully' });

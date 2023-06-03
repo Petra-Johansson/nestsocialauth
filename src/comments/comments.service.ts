@@ -28,9 +28,15 @@ export class CommentsService {
    * @param {CreateCommentDto} createCommentDto - The information of the comment to create.
    * @returns {Promise<PostEntity>} - A promise that resolves to the created comment.
    */
-  async create(createCommentDto: CreateCommentDto): Promise<CommentEntity> {
+  async create(
+    createCommentDto: CreateCommentDto,
+    userId: string,
+  ): Promise<CommentEntity> {
     try {
-      const comment = this.commentRepository.create(createCommentDto);
+      const comment = this.commentRepository.create({
+        ...createCommentDto,
+        user: { id: userId },
+      });
       const savedComment = await this.commentRepository.save(comment);
       this.logger.log(`Comment with id  ${savedComment.id} was created`);
       return savedComment;

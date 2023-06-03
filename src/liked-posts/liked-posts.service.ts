@@ -39,6 +39,10 @@ export class LikedPostsService {
       this.logger.warn('User or Post not found');
       return 'User or Post not found';
     }
+    if (post.user.id === userId) {
+      this.logger.warn('User cannot like their own post');
+      return 'User cannot like their own post';
+    }
 
     if (user.liked.some((likedPost) => likedPost.id === post.id)) {
       this.logger.warn('User has already liked this post');

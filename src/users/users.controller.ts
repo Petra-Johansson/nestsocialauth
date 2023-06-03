@@ -15,10 +15,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiTags,
-  ApiCreatedResponse,
   ApiOkResponse,
-  ApiNotFoundResponse,
-  ApiNoContentResponse,
   ApiResponse,
   ApiOperation,
   ApiBody,
@@ -75,6 +72,7 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'No user found for matching ID' })
   @Get('by-id/:id')
+  @UseGuards(JwtAuthGuard)
   @Roles(UserRole.ADMIN, UserRole.USER)
   async findOne(@Query('id') id: string): Promise<UserEntity> {
     console.log(id);
@@ -90,8 +88,8 @@ export class UsersController {
     status: 200,
     description: 'Successfully retrieved user with token.',
   })
-  @UseGuards(JwtAuthGuard)
   @Get('profile')
+  @UseGuards(JwtAuthGuard)
   async getProfile(@UserId() userId: string) {
     const user = await this.usersService.findOne(userId);
     if (!user) {
@@ -125,7 +123,7 @@ export class UsersController {
   @Delete()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@UserId() id: string): Promise<void> {
-    return this.usersService.remove(id);
+  async remove(@UserId() userId: string): Promise<void> {
+    return this.usersService.remove(userId);
   }
 }

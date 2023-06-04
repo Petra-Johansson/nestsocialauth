@@ -9,6 +9,9 @@ import {
   HttpStatus,
   Res,
   NotFoundException,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { TagsService } from './tags.service';
 import { CreateTagDto } from './dto/create-tag.dto';
@@ -21,9 +24,15 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Response } from 'express';
+import { UserRole } from 'src/users/enums/user-role.enum';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { UserId } from 'src/auth/decorators/user-id.decorator';
 
 @ApiTags('tags')
 @Controller('tags')
+@UseGuards(RolesGuard, JwtAuthGuard)
 export class TagsController {
   constructor(private readonly tagsService: TagsService) {}
 
@@ -33,15 +42,18 @@ export class TagsController {
     description: 'The tag has been successfully created.',
   })
   @ApiBody({ type: CreateTagDto })
-  @Post()
   @HttpCode(HttpStatus.CREATED)
+  @Post()
+  @Roles(UserRole.ADMIN)
+  @UsePipes(ValidationPipe)
   async create(
+    @UserId() userId: string,
     @Res() res: Response,
     @Body() createTagDto: CreateTagDto,
-  ): Promise<TagEntity> {
-    const tag = await this.tagsService.create(createTagDto);
+  ) {
+    const tag = await this.tagsService.create(createTagDto, userId);
     res.set('Location', `/tags/${tag.id}`);
-    return tag;
+    return res.status(HttpStatus.CREATED).json(tag);
   }
 
   @ApiOkResponse({
@@ -77,6 +89,7 @@ export class TagsController {
   })
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(UserRole.ADMIN)
   async remove(@Param('id') id: string): Promise<void> {
     return this.tagsService.remove(id);
   }

@@ -12,6 +12,7 @@ import { CommentsModule } from './comments/comments.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import databaseConfig from './config/database-config/database.config';
 import { DataSource } from 'typeorm';
+import { LikedPostsModule } from './liked-posts/liked-posts.module';
 
 const typeOrmConfig = {
   imports: [
@@ -34,6 +35,7 @@ const typeOrmConfig = {
     ProjectConfigModule,
     CommentsModule,
     TypeOrmModule.forRootAsync(typeOrmConfig),
+    LikedPostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

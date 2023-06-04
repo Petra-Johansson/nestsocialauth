@@ -51,6 +51,11 @@ export class PostEntity {
   @ApiPropertyOptional()
   likes: number;
 
+  @ApiProperty({ type: () => [UserEntity] })
+  @ManyToMany(() => UserEntity)
+  @JoinTable()
+  likedBy: UserEntity[];
+
   @Column()
   @ApiPropertyOptional()
   slug: string;

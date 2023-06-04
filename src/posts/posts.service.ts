@@ -4,6 +4,7 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -29,9 +30,15 @@ export class PostsService {
    * @param {CreatePostDto} createPostDto - The information of the post to create.
    * @returns {Promise<PostEntity>} A promise that resolves to the created post.
    */
-  async create(createPostDto: CreatePostDto): Promise<PostEntity> {
+  async create(
+    createPostDto: CreatePostDto,
+    userId: string,
+  ): Promise<PostEntity> {
     try {
-      const post = this.postRepository.create(createPostDto);
+      const post = this.postRepository.create({
+        ...createPostDto,
+        user: { id: userId },
+      });
       const savedPost = await this.postRepository.save(post);
       this.logger.log(`Post with id ${savedPost.id} was created`);
       return savedPost;
@@ -50,7 +57,11 @@ export class PostsService {
    */
   async findAll(): Promise<PostEntity[]> {
     try {
-      return await this.postRepository.find();
+      return await this.postRepository.find({
+        order: {
+          createdAt: 'DESC',
+        },
+      });
     } catch (error) {
       this.logger.error(`Failed to find posts: ${error.message}`);
       throw new HttpException(
@@ -116,36 +127,6 @@ export class PostsService {
       throw new NotFoundException(`Post with slug ${slug} not found`);
     }
     return post;
-  }
-
-  /**
-   * Add a like to a post.
-   * @param {string} id - The ID of the post to like.
-   * @returns {Promise<PostEntity>} A promise that resolves to the liked post.
-   */
-  async likePost(id: string): Promise<PostEntity> {
-    const post = await this.findOne(id);
-    if (!post) {
-      throw new NotFoundException(`Post with id ${id} not found`);
-    }
-    post.likes += 1;
-    return this.postRepository.save(post);
-  }
-
-  /**
-   * Remove a like from a post.
-   * @param {string} id - The ID of the post to unlike.
-   * @returns {Promise<PostEntity>} A promise that resolves to the unliked post.
-   */
-  async removeLikeFromPost(id: string): Promise<PostEntity> {
-    const post = await this.findOne(id);
-    if (!post) {
-      throw new NotFoundException(`Post with id ${id} not found`);
-    }
-    if (post.likes > 0) {
-      post.likes -= 1;
-    }
-    return this.postRepository.save(post);
   }
 
   /**

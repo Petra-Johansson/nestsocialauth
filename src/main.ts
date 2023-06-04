@@ -2,21 +2,21 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { AppConfigService } from './config/app-config/app.config.service';
-import cookieParser = require('cookie-parser');
+import * as cookieParser from 'cookie-parser';
 import { corsOptions } from './config/cors-config';
 import * as cors from 'cors';
-import { ValidationPipe } from './common/pipes/validation.pipe';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(cookieParser());
   app.use(cors(corsOptions));
   app.useGlobalPipes(new ValidationPipe());
 
   // Retrieve instances of ConfigService and AppConfigService
   const configService = app.get(ConfigService);
   const appConfigService = app.get(AppConfigService);
-  app.use(cookieParser());
 
   const config = new DocumentBuilder()
     .setTitle('Nest Social Auth')

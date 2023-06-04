@@ -10,13 +10,12 @@ import {
   Put,
   Res,
   NotFoundException,
+  UseGuards,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
-  ApiCreatedResponse,
   ApiOkResponse,
-  ApiNotFoundResponse,
-  ApiNoContentResponse,
   ApiResponse,
   ApiOperation,
   ApiBody,
@@ -26,9 +25,16 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
 import { UsersService } from './users.service';
 import { Response } from 'express';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { UserRole } from './enums/user-role.enum';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { UserId } from 'src/auth/decorators/user-id.decorator';
+import { UserIsUserGuard } from './guards/user-is-user.guard';
 
-@Controller('users')
 @ApiTags('Users')
+@Controller('users')
+@UseGuards(RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -40,13 +46,10 @@ export class UsersController {
   @ApiBody({ type: CreateUserDto })
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(
-    @Res() res: Response,
-    @Body() createUserDto: CreateUserDto,
-  ): Promise<UserEntity> {
+  async create(@Res() res: Response, @Body() createUserDto: CreateUserDto) {
     const user = await this.usersService.create(createUserDto);
     res.set('Location', `/users/${user.id}`);
-    return user;
+    return res.status(HttpStatus.CREATED).json(user);
   }
 
   @ApiOkResponse({
@@ -56,6 +59,7 @@ export class UsersController {
   })
   @ApiOperation({ summary: 'get all users' })
   @Get()
+  @UseGuards(JwtAuthGuard)
   findAll(): Promise<UserEntity[]> {
     return this.usersService.findAll();
   }
@@ -67,11 +71,28 @@ export class UsersController {
     type: UserEntity,
   })
   @ApiResponse({ status: 404, description: 'No user found for matching ID' })
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<UserEntity> {
+  @Get('by-id/:id')
+  @UseGuards(JwtAuthGuard)
+  @Roles(UserRole.ADMIN, UserRole.USER)
+  async findOne(@Query('id') id: string): Promise<UserEntity> {
     const user = await this.usersService.findOne(id);
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
+  }
+
+  @ApiOperation({ summary: 'Get an authenticated users profile' })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully retrieved user with token.',
+  })
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@UserId() userId: string) {
+    const user = await this.usersService.findOne(userId);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
     }
     return user;
   }
@@ -84,12 +105,13 @@ export class UsersController {
   })
   @ApiResponse({ status: 404, description: 'No user found for matching ID' })
   @ApiBody({ type: UpdateUserDto })
-  @Put(':id')
+  @Put()
+  @UseGuards(JwtAuthGuard)
   async update(
-    @Param('id') id: string,
+    @UserId() userId: string,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserEntity> {
-    return this.usersService.update(id, updateUserDto);
+    return this.usersService.update(userId, updateUserDto);
   }
 
   @ApiOperation({ summary: 'Delete a user' })
@@ -97,9 +119,10 @@ export class UsersController {
     status: 204,
     description: 'The user has been successfully deleted.',
   })
-  @Delete(':id')
+  @Delete()
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string): Promise<void> {
-    return this.usersService.remove(id);
+  async remove(@UserId() userId: string): Promise<void> {
+    return this.usersService.remove(userId);
   }
 }

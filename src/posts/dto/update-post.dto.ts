@@ -14,10 +14,6 @@ export class UpdatePostDto {
   @IsString()
   description?: string;
 
-  @ApiProperty()
-  @IsUUID()
-  userId?: string;
-
   @ApiProperty({ type: () => [CreateTagDto] })
   @IsOptional()
   @ValidateNested({ each: true })

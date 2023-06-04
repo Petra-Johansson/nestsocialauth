@@ -35,8 +35,6 @@ export class LikedPostsController {
     @UserId() userId: string,
     @Param('id') id: string,
   ): Promise<string> {
-    console.log(userId);
-    console.log(id);
     return this.likedPostsService.unlikePost(userId, id);
   }
 }

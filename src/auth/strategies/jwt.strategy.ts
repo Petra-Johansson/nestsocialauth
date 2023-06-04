@@ -10,7 +10,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request) => {
           const data = request.cookies['jwt'];
-          console.log(data);
           if (!data) {
             return null;
           }

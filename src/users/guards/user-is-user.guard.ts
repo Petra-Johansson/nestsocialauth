@@ -14,8 +14,6 @@ export class UserIsUserGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const user = await this.usersService.findOne(request.params.id);
-    console.log(user.id);
-    console.log(extractUserId(request));
     if (user.id !== extractUserId(request)) {
       switch (request.method) {
         case 'PUT':

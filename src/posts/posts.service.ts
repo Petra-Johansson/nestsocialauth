@@ -57,7 +57,11 @@ export class PostsService {
    */
   async findAll(): Promise<PostEntity[]> {
     try {
-      return await this.postRepository.find();
+      return await this.postRepository.find({
+        order: {
+          createdAt: 'DESC',
+        },
+      });
     } catch (error) {
       this.logger.error(`Failed to find posts: ${error.message}`);
       throw new HttpException(

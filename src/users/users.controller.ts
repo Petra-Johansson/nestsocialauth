@@ -75,7 +75,6 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Roles(UserRole.ADMIN, UserRole.USER)
   async findOne(@Query('id') id: string): Promise<UserEntity> {
-    console.log(id);
     const user = await this.usersService.findOne(id);
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);

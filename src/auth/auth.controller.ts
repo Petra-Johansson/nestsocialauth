@@ -29,6 +29,7 @@ export class AuthController {
     const jwt = await this.authService.login(req.user);
     res.cookie('jwt', jwt.access_token, { httpOnly: true });
     res.cookie('refreshToken', jwt.refresh_token, { httpOnly: true });
+    //console.log('res:', res, 'req:', req);
     return res.send('Logged in!');
   }
 

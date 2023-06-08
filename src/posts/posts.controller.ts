@@ -13,6 +13,7 @@ import {
   NotFoundException,
   UseGuards,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -67,8 +68,8 @@ export class PostsController {
     type: PostEntity,
   })
   @ApiResponse({ status: 404, description: 'No post found for matching ID' })
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<PostEntity> {
+  @Get('find-by-id')
+  async findOne(@Query('id') id: string): Promise<PostEntity> {
     const post = await this.postsService.findOne(id);
     if (!post) {
       throw new NotFoundException(`Post with ID ${id} not found`);
@@ -86,8 +87,8 @@ export class PostsController {
     status: 404,
     description: 'No posts found for matching userId',
   })
-  @Get(':userId')
-  async findByUserId(@Param('userId') userId: string): Promise<PostEntity[]> {
+  @Get('/find-by-user')
+  async findByUserId(@UserId() userId: string): Promise<PostEntity[]> {
     const posts = await this.postsService.findByUserId(userId);
     if (!posts) {
       throw new NotFoundException(`Posts with userId ${userId} not found`);
